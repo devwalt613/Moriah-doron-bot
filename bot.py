@@ -68,6 +68,13 @@ def fetch_messages():
         if not post_id:
             continue
 
+        # Strip any quoted/replied-to message first — it has its own
+        # tgme_widget_message_text div that would otherwise get matched
+        # instead of the actual new message text.
+        reply_block = block.select_one("div.tgme_widget_message_reply")
+        if reply_block:
+            reply_block.decompose()
+
         text_div = block.select_one("div.tgme_widget_message_text")
         text = text_div.get_text("\n", strip=True) if text_div else ""
 
