@@ -75,8 +75,11 @@ def fetch_messages():
         if reply_block:
             reply_block.decompose()
 
-        text_div = block.select_one("div.tgme_widget_message_text")
-        text = text_div.get_text("\n", strip=True) if text_div else ""
+        # A message quoting/replying to another has TWO tgme_widget_message_text
+        # divs — the quoted one first, the actual new message last. Taking the
+        # last one skips the quote regardless of what wrapper class Telegram uses.
+        text_divs = block.select("div.tgme_widget_message_text")
+        text = text_divs[-1].get_text("\n", strip=True) if text_divs else ""
 
         link_tag = block.select_one("a.tgme_widget_message_date")
         link = link_tag["href"] if link_tag and link_tag.get("href") else f"https://t.me/{post_id}"
