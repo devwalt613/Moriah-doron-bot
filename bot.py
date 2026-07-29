@@ -101,9 +101,19 @@ def poll_once(seen, first_run):
         log.exception("Failed to fetch/parse Telegram preview page")
         return seen
 
+    if first_run:
+        # Mark every currently-existing post as seen WITHOUT posting any of
+        # them — the bot should only announce posts that appear after this
+        # first run, not backfill old channel history.
+        for msg in messages:
+            seen.add(msg["id"])
+        log.info("First run: marked %d existing posts as seen, posting nothing", len(messages))
+        save_seen(seen)
+        return seen
+
     new_messages = [m for m in messages if m["id"] not in seen]
 
-    if first_run or len(new_messages) > MAX_BACKFILL:
+    if len(new_messages) > MAX_BACKFILL:
         new_messages = new_messages[-MAX_BACKFILL:]
 
     for msg in new_messages:
